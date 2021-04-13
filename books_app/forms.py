@@ -5,6 +5,7 @@ from wtforms import (
     SelectField,
     SubmitField,
     TextAreaField,
+    PasswordField,
 )
 from wtforms.ext.sqlalchemy.fields import (
     QuerySelectField,
@@ -54,5 +55,24 @@ class GenreForm(FlaskForm):
     # - the genre's name (e.g. fiction, non-fiction, etc)
     name = StringField(
         "Genre Name", validators=[DataRequired(), Length(min=3, max=80)]
+    )
+    submit = SubmitField("Submit")
+
+
+class UserForm(FlaskForm):
+    """Form to create a user."""
+
+    # The user's name
+    username = StringField(
+        "Username", validators=[DataRequired(), Length(min=3, max=15)]
+    )
+    favorite_books = StringField(
+        "Add a Favorite Book",
+        validators=[DataRequired(), Length(min=3, max=30)],
+    )
+    # password
+    password = PasswordField(
+        "Password",
+        validators=[DataRequired(), Length(min=8, max=12)],
     )
     submit = SubmitField("Submit")

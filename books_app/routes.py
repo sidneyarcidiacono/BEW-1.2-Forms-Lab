@@ -10,7 +10,7 @@ from flask import (
 )
 from datetime import date, datetime
 from books_app.models import Book, Author, Genre, User
-from books_app.forms import BookForm, AuthorForm, GenreForm
+from books_app.forms import BookForm, AuthorForm, GenreForm, UserForm
 
 # Import app and db from events_app package so that we can run app
 from books_app import app, db
@@ -98,8 +98,19 @@ def create_genre():
 
 @main.route("/create_user", methods=["GET", "POST"])
 def create_user():
-    # STRETCH CHALLENGE: Fill out the Create User route
-    return "Not Yet Implemented"
+    # Make a UserForm instance
+    form = UserForm()
+
+    if form.validate_on_submit():
+        new_user = User(
+            username=form.username.data, password=form.password.data
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        flash("Successfully signed up!")
+        return redirect(url_for("main.homepage"))
+
+    return render_template("create_user.html", form=form)
 
 
 @main.route("/book/<book_id>", methods=["GET", "POST"])
@@ -107,9 +118,21 @@ def book_detail(book_id):
     book = Book.query.get(book_id)
     form = BookForm(obj=book)
 
-    # TODO: If the form was submitted and is valid, update the fields in the
+    # If the form was submitted and is valid, update the fields in the
     # Book object and save to the database, then flash a success message to the
     # user and redirect to the book detail page
+    if form.validate_on_submit():
+        book.title = form.title.data
+        book.publish_date = form.publish_date.data
+        book.author = form.author.data
+        book.audience = form.audience.data
+        book.genres = form.genres.data
+
+        db.session.commit()
+        # Alternatively, we could use: Book.query.get(book_id).update(...)
+        # But this feels more readable if we're assuming changing all fields
+        flash("Book successfully updated")
+        return redirect(url_for("main.book_detail", book_id=book.id))
 
     return render_template("book_detail.html", book=book, form=form)
 
@@ -118,7 +141,13 @@ def book_detail(book_id):
 def profile(username):
     # TODO: Make a query for the user with the given username, and send to the
     # template
+    user = User.query.filter_by(username=username)
+    form = UserForm()
 
-    # STRETCH CHALLENGE: Add ability to modify a user's username or favorite
-    # books
+    if form.validate_on_submit():
+        user.username = form.username.data
+
+        db.session.commit()
+        flash("User successfully updated")
+        return redirect(url_for("main.homepage"))
     return render_template("profile.html", username=username)
